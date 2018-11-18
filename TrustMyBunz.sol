@@ -12,8 +12,10 @@ contract TrustMyBunz {
         uint totalValue;
         uint trancheCount;
         uint trancheValue;
+        uint arbitrator_fee;
         uint expiryDate;
         bool buyerApprove;
+        bool arbitrator_percent;
         bool conflict;
         bool resolved;
     }
@@ -45,6 +47,8 @@ contract TrustMyBunz {
         TransactionInfo[transactionID].totalValue = msg.value;
         TransactionInfo[transactionID].trancheCount = _trancheCount;
         TransactionInfo[transactionID].trancheValue = msg.value / _trancheCount;
+        TransactionInfo[transactionID].arbitrator_fee = ArbitratorInfo[_arbitrator].fee;
+        TransactionInfo[transactionID].arbitrator_percent = ArbitratorInfo[_arbitrator].percent;
         // Transaction expires in 60 days. 
         TransactionInfo[transactionID].expiryDate = block.number + 2419200;
     }
@@ -94,7 +98,47 @@ contract TrustMyBunz {
         TransactionInfo[transactionID].resolved = true;
     }
     
+    // Arbitrator chooses buyer to win.
+    function buyerWins (uint _transactionID) public {
+        require(!TransactionInfo[_transactionID].resolved &&
+            TransactionInfo[_transactionID].conflict &&
+            (msg.sender == TransactionInfo[_transactionID].arbitrator) && 
+            (block.number < TransactionInfo[_transactionID].expiryDate));
+            
+        if (!TransactionInfo[_transactionID].arbitrator_percent) {
+            // Flat fee.
+            TransactionInfo[_transactionID].totalValue -= TransactionInfo[_transactionID].arbitrator_fee;
+            TransactionInfo[_transactionID].arbitrator.transfer(TransactionInfo[_transactionID].arbitrator_fee);
+        } else {
+            // Percentage.
+            // TransactionInfo[_transactionID].totalValue -= TransactionInfo[_transactionID].arbitrator_fee
+            // TransactionInfo[_transactionID].arbitrator.transfer(TransactionInfo[_transactionID].arbitrator_fee);
+        }
+        
+        TransactionInfo[_transactionID].buyer.transfer(TransactionInfo[_transactionID].totalValue);
+        TransactionInfo[transactionID].resolved = true;
+    }
     
+    // Arbitrator chooses seller to win.
+    function sellerWins (uint _transactionID) public {
+        require(!TransactionInfo[_transactionID].resolved &&
+            TransactionInfo[_transactionID].conflict &&
+            (msg.sender == TransactionInfo[_transactionID].arbitrator) && 
+            (block.number < TransactionInfo[_transactionID].expiryDate));
+            
+        if (!TransactionInfo[_transactionID].arbitrator_percent) {
+            // Flat fee.
+            TransactionInfo[_transactionID].totalValue -= TransactionInfo[_transactionID].arbitrator_fee;
+            TransactionInfo[_transactionID].arbitrator.transfer(TransactionInfo[_transactionID].arbitrator_fee);
+        } else {
+            // Percentage.
+            // TransactionInfo[_transactionID].totalValue -= TransactionInfo[_transactionID].arbitrator_fee
+            // TransactionInfo[_transactionID].arbitrator.transfer(TransactionInfo[_transactionID].arbitrator_fee);
+        }
+        
+        TransactionInfo[_transactionID].seller.transfer(TransactionInfo[_transactionID].totalValue);
+        TransactionInfo[transactionID].resolved = true;
+    }
         
     
         
