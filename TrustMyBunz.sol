@@ -4,7 +4,6 @@ contract TrustMyBunz {
     
     uint public transactionID;
     
-    
     struct Transaction {
         address buyer;
         address arbitrator;
@@ -20,17 +19,13 @@ contract TrustMyBunz {
         bool resolved;
     }
     
-    
-    
     struct Arbitrator {
         uint fee;
         bool percent;
     }
     
-    
     mapping(uint => Transaction) TransactionInfo;
     mapping(address => Arbitrator) ArbitratorInfo;
-    
     
     constructor() public {
         transactionID = 0;
@@ -111,8 +106,9 @@ contract TrustMyBunz {
             TransactionInfo[_transactionID].arbitrator.transfer(TransactionInfo[_transactionID].arbitrator_fee);
         } else {
             // Percentage.
-            // TransactionInfo[_transactionID].totalValue -= TransactionInfo[_transactionID].arbitrator_fee
-            // TransactionInfo[_transactionID].arbitrator.transfer(TransactionInfo[_transactionID].arbitrator_fee);
+            uint arbitration_fee = (TransactionInfo[_transactionID].arbitrator_fee / 100) * TransactionInfo[_transactionID].totalValue;
+            TransactionInfo[_transactionID].totalValue -= arbitration_fee;
+            TransactionInfo[_transactionID].arbitrator.transfer(arbitration_fee);
         }
         
         TransactionInfo[_transactionID].buyer.transfer(TransactionInfo[_transactionID].totalValue);
@@ -132,21 +128,18 @@ contract TrustMyBunz {
             TransactionInfo[_transactionID].arbitrator.transfer(TransactionInfo[_transactionID].arbitrator_fee);
         } else {
             // Percentage.
-            // TransactionInfo[_transactionID].totalValue -= TransactionInfo[_transactionID].arbitrator_fee
-            // TransactionInfo[_transactionID].arbitrator.transfer(TransactionInfo[_transactionID].arbitrator_fee);
+            uint arbitration_fee = (TransactionInfo[_transactionID].arbitrator_fee / 100) * TransactionInfo[_transactionID].totalValue;
+            TransactionInfo[_transactionID].totalValue -= arbitration_fee;
+            TransactionInfo[_transactionID].arbitrator.transfer(arbitration_fee);
         }
         
         TransactionInfo[_transactionID].seller.transfer(TransactionInfo[_transactionID].totalValue);
         TransactionInfo[transactionID].resolved = true;
     }
-        
     
-        
-        
-        
-        
-    
-    
-    
-    
+    // Arbitrator sets fee. Either flat fee or percentage of transaction.
+    function setFee (uint _fee, bool _percentage) public {
+        ArbitratorInfo[msg.sender].fee = _fee;
+        ArbitratorInfo[msg.sender].percent = _percentage;
+    }   
 }
